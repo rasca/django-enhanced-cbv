@@ -1,0 +1,9 @@
+{% for formset in formsets %}
+    {% if formset.errors %}
+    ERROR
+    {% endif %}
+    {% for form in formset %}
+    {{form.as_p}}
+    {% endfor %}
+    {{formset.management_form}}
+{% endfor %}
