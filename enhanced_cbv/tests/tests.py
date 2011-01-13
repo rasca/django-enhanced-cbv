@@ -1,5 +1,4 @@
 from django.test import TestCase
-
 from enhanced_cbv.views.edit import FormSetsMixin
 
 class FormSetsViewTests(TestCase):
@@ -52,4 +51,4 @@ class FormSetsViewTests(TestCase):
         response = self.client.post('/edit/formsets/', self.data)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ERROR')
-        
+

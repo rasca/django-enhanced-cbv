@@ -1,5 +1,6 @@
-from django.forms.formsets import formset_factory, BaseFormSet, all_valid
 from django.http import HttpResponseRedirect
+from django.core.exceptions import ImproperlyConfigured
+from django.forms.formsets import formset_factory, BaseFormSet, all_valid
 
 from django.views.generic.base import View, TemplateResponseMixin
 
@@ -51,8 +52,8 @@ class FormSetsMixin(object):
     A mixin that provides a way to show and handle formsets
     """
 
-    # must be a list of BaseGenericFormSet
-    formsets = []
+    formsets = [] # must be a list of BaseGenericFormSet
+    success_url = None
 
     def __init__(self, *args, **kwargs):
         self.instantiate_enhanced_formsets()
@@ -135,6 +136,9 @@ class ProcessFormSetsView(View):
             return self.formsets_valid()
         else:
             return self.formsets_invalid()
+
+    def put(self, request, *args, **kwargs):
+        return self.post(*args, **kwargs)
 
 
 class BaseFormSetsView(FormSetsMixin, ProcessFormSetsView):
