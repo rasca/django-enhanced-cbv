@@ -1,6 +1,8 @@
 from django.http import HttpResponseRedirect
 from django.core.exceptions import ImproperlyConfigured
 from django.forms.formsets import formset_factory, BaseFormSet, all_valid
+from django.forms.models import (modelformset_factory, BaseModelFormSet,
+                                 ModelForm)
 
 from django.views.generic.base import View, TemplateResponseMixin
 
@@ -47,12 +49,54 @@ class EnhancedFormSet(object):
                 'max_num': self.max_num, }
 
 
+class EnhancedModelFormSet(EnhancedFormSet):
+    """
+    A base class for generic model formsets
+    """
+    # TODO: provide a hook for formfield_callback
+
+    form_class = ModelForm
+    formset_class = BaseModelFormSet
+    model = None
+    queryset = None
+    fields = None
+    exclude = None
+
+    def get_factory(self):
+        return modelformset_factory
+
+    def get_model(self):
+        if self.model:
+            return self.model
+        else:
+            raise ImproperlyConfigured(
+                "No model to create the modelformset. Provide one.")
+
+    def get_queryset(self):
+        return self.queryset
+
+    def get_fields(self):
+        return self.fields
+
+    def get_exclude(self):
+        return self.exclude
+
+    def get_kwargs(self):
+        kwargs = super(EnhancedModelFormSet, self).get_kwargs()
+        kwargs.update({
+            'model': self.get_model(),
+            'fields': self.get_fields(),
+            'exclude': self.get_exclude(),
+        })
+        return kwargs
+
+
 class FormSetsMixin(object):
     """
     A mixin that provides a way to show and handle formsets
     """
 
-    formsets = [] # must be a list of BaseGenericFormSet
+    formsets = []  # must be a list of BaseGenericFormSet
     success_url = None
 
     def __init__(self, *args, **kwargs):
@@ -122,6 +166,36 @@ class FormSetsMixin(object):
         return self.render_to_response(self.get_context_data())
 
 
+class ModelFormSetsMixin(FormSetsMixin):
+    """
+    A mixin that provides a way to show and handle model formsets
+    """
+
+    def construct_formsets(self):
+        """
+        Constructs the formsets
+        """
+        # FIXME: don't override the hole method just to add the queryset arg
+        kwargs = self.get_formsets_kwargs()
+
+        self.formsets_instances = []
+
+        prefixes = {}
+        for enhanced_formset in self.enhanced_formsets_instances:
+            prefix = enhanced_formset.get_formset_class().get_default_prefix()
+            prefixes[prefix] = prefixes.get(prefix, 0) + 1
+            if prefixes[prefix] != 1:
+                prefix = "%s-%s" % (prefix, prefixes[prefix])
+            self.formsets_instances.append(
+                enhanced_formset.get_formset(prefix=prefix,
+                         queryset=enhanced_formset.get_queryset(), **kwargs))
+
+    def formsets_valid(self):
+        for formset in self.formsets_instances:
+            formset.save()
+        return super(ModelFormSetsMixin, self).formsets_valid()
+
+
 class ProcessFormSetsView(View):
     """
     A mixin that processes formsets on POST
@@ -147,7 +221,19 @@ class BaseFormSetsView(FormSetsMixin, ProcessFormSetsView):
     """
 
 
+class BaseModelFormSetsView(ModelFormSetsMixin, ProcessFormSetsView):
+    """
+    A base view for displaying model formsets
+    """
+
+
 class FormSetsView(TemplateResponseMixin, BaseFormSetsView):
     """
     A view for displaying formsets, and rendering a template response
+    """
+
+
+class ModelFormSetsView(TemplateResponseMixin, BaseModelFormSetsView):
+    """
+    A view for displaying model formsets, and rendering a template response
     """
