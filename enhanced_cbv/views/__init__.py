@@ -1,1 +1,1 @@
-from edit import FormSetsView, ModelFormSetsView
+from edit import FormSetsView, ModelFormSetsView, InlineFormSetsView

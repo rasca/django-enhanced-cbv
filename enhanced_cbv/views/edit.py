@@ -1,10 +1,12 @@
 from django.http import HttpResponseRedirect
 from django.core.exceptions import ImproperlyConfigured
 from django.forms.formsets import formset_factory, BaseFormSet, all_valid
-from django.forms.models import (modelformset_factory, BaseModelFormSet,
-                                 ModelForm)
+from django.forms.models import (modelformset_factory, inlineformset_factory,
+                                 BaseModelFormSet, BaseInlineFormSet, ModelForm)
 
 from django.views.generic.base import View, TemplateResponseMixin
+from django.views.generic.detail import SingleObjectTemplateResponseMixin
+from django.views.generic.edit import ModelFormMixin
 
 
 class EnhancedFormSet(object):
@@ -21,12 +23,12 @@ class EnhancedFormSet(object):
     can_delete = False
     max_num = None
 
-    def get_formset(self, prefix=None, **kwargs):
+    def get_base_formset(self, **kwargs):
         """
-        Returns the instantiated formset
+        Returns the base formset
         """
-        formset = self.get_factory()(**self.get_kwargs())
-        return formset(prefix=prefix, **kwargs)
+        kwargs.update(self.get_kwargs())
+        return self.get_factory()(**kwargs)
 
     def get_factory(self):
         """
@@ -91,6 +93,28 @@ class EnhancedModelFormSet(EnhancedFormSet):
         return kwargs
 
 
+class EnhancedInlineFormSet(EnhancedModelFormSet):
+    """
+    A base class for generic inline formsets
+    """
+
+    fk_name = None
+    formset_class = BaseInlineFormSet
+
+    def get_factory(self):
+        return inlineformset_factory
+
+    def get_fk_name(self):
+        return self.fk_name
+
+    def get_kwargs(self):
+        kwargs = super(EnhancedInlineFormSet, self).get_kwargs()
+        kwargs.update({
+            'fk_name': self.get_fk_name(),
+        })
+        return kwargs
+
+
 class FormSetsMixin(object):
     """
     A mixin that provides a way to show and handle formsets
@@ -115,20 +139,31 @@ class FormSetsMixin(object):
         """
         Constructs the formsets
         """
-        kwargs = self.get_formsets_kwargs()
-
         self.formsets_instances = []
 
         prefixes = {}
         for enhanced_formset in self.enhanced_formsets_instances:
-            prefix = enhanced_formset.get_formset_class().get_default_prefix()
+            base_formset = enhanced_formset.get_base_formset(
+                **self.get_factory_kwargs())
+
+            # calculate prefix
+            prefix = base_formset.get_default_prefix()
             prefixes[prefix] = prefixes.get(prefix, 0) + 1
             if prefixes[prefix] != 1:
                 prefix = "%s-%s" % (prefix, prefixes[prefix])
-            self.formsets_instances.append(
-                enhanced_formset.get_formset(prefix=prefix, **kwargs))
 
-    def get_formsets_kwargs(self):
+            self.formsets_instances.append(
+                base_formset(prefix=prefix, **self.get_formsets_kwargs(
+                    enhanced_formset))
+            )
+
+    def get_factory_kwargs(self):
+        """
+        Returns the keyword arguments for the formsets factory
+        """
+        return {}
+
+    def get_formsets_kwargs(self, enhanced_formset):
         """"
         Returns the keyword arguments for instanciating the formsets
         """
@@ -171,29 +206,56 @@ class ModelFormSetsMixin(FormSetsMixin):
     A mixin that provides a way to show and handle model formsets
     """
 
-    def construct_formsets(self):
+    def get_formsets_kwargs(self, enhanced_formset):
+        """"
+        Returns the keyword arguments for instanciating the model formsets
         """
-        Constructs the formsets
-        """
-        # FIXME: don't override the hole method just to add the queryset arg
-        kwargs = self.get_formsets_kwargs()
-
-        self.formsets_instances = []
-
-        prefixes = {}
-        for enhanced_formset in self.enhanced_formsets_instances:
-            prefix = enhanced_formset.get_formset_class().get_default_prefix()
-            prefixes[prefix] = prefixes.get(prefix, 0) + 1
-            if prefixes[prefix] != 1:
-                prefix = "%s-%s" % (prefix, prefixes[prefix])
-            self.formsets_instances.append(
-                enhanced_formset.get_formset(prefix=prefix,
-                         queryset=enhanced_formset.get_queryset(), **kwargs))
+        kwargs = super(ModelFormSetsMixin, self).get_formsets_kwargs(
+                                                    enhanced_formset)
+        kwargs.update({
+            'queryset': enhanced_formset.get_queryset()
+        })
+        return kwargs
 
     def formsets_valid(self):
+        # FIXME: beware of m2m
         for formset in self.formsets_instances:
             formset.save()
         return super(ModelFormSetsMixin, self).formsets_valid()
+
+
+class InlineFormSetsMixin(ModelFormSetsMixin, ModelFormMixin):
+    """ 
+    A mixin that provides a way to show and handle a model with it's inline
+    formsets
+    """
+    def get_formsets_kwargs(self, enhanced_formset):
+        """"
+        Returns the keyword arguments for instanciating the inline formsets
+        """
+        kwargs = super(InlineFormSetsMixin, self).get_formsets_kwargs(
+                                                    enhanced_formset)
+        kwargs.update({
+            'instance': self.object
+        })
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        """
+        Adds the context data from both parents
+        """
+        context_data = ModelFormSetsMixin.get_context_data(self)
+        context_data.update(ModelFormMixin.get_context_data(self, **kwargs))
+        # print context_data['formsets'][0]
+        return context_data
+
+    def get_factory_kwargs(self):
+        """
+        Returns the keyword arguments for the formsets factory
+        """
+        return {
+            'parent_model': self.object.__class__,
+        }
 
 
 class ProcessFormSetsView(View):
@@ -215,6 +277,61 @@ class ProcessFormSetsView(View):
         return self.post(*args, **kwargs)
 
 
+class ProcessInlineFormSetsView(View):
+    """
+    A mixin that processes a model instance and it's inline formsets on POST
+    """
+
+    def get(self, request, *args, **kwargs):
+        # Create or Update
+        try:
+            self.object = self.get_object()
+        except AttributeError:
+            self.object = self.model()
+
+        # ProcessFormView
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+
+        # ProcessFormSetsView
+        self.construct_formsets()
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def post(self, request, *args, **kwargs):
+        # Create or Update
+        try:
+            self.object = self.get_object()
+        except AttributeError:
+            self.object = self.model()
+
+        # ProcessFormView
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+
+        if form.is_valid():
+            self.object = form.save(commit=False)
+
+            # ProcessFormSetsViewV
+            self.construct_formsets()
+
+            if all_valid(self.formsets_instances):
+                self.object.save()
+                form.save_m2m()
+                for formset in self.formsets_instances:
+                    formset.save()
+
+                return HttpResponseRedirect(self.get_success_url())
+        else:
+            # ProcessFormSetsViewV
+            self.construct_formsets()
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+    def put(self, request, *args, **kwargs):
+        return self.post(*args, **kwargs)
+
+
 class BaseFormSetsView(FormSetsMixin, ProcessFormSetsView):
     """
     A base view for displaying formsets
@@ -224,6 +341,12 @@ class BaseFormSetsView(FormSetsMixin, ProcessFormSetsView):
 class BaseModelFormSetsView(ModelFormSetsMixin, ProcessFormSetsView):
     """
     A base view for displaying model formsets
+    """
+
+
+class BaseInlineFormSetsView(InlineFormSetsMixin, ProcessInlineFormSetsView):
+    """
+    A base view for displaying a model instance with it's inline formsets
     """
 
 
@@ -237,3 +360,13 @@ class ModelFormSetsView(TemplateResponseMixin, BaseModelFormSetsView):
     """
     A view for displaying model formsets, and rendering a template response
     """
+
+
+
+class InlineFormSetsView(SingleObjectTemplateResponseMixin,
+                         BaseInlineFormSetsView):
+    """
+    A view for displaying a model instance with it's inline formsets, and
+    rendering a template response
+    """
+    template_name_suffix = '_form'

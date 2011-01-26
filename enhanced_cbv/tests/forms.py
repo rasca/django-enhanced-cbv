@@ -1,13 +1,15 @@
 from django import forms
 from django.forms.formsets import formset_factory
 
-from enhanced_cbv.views.edit import EnhancedFormSet, EnhancedModelFormSet
+from enhanced_cbv.views.edit import (EnhancedFormSet, EnhancedModelFormSet,
+                                     EnhancedInlineFormSet)
 from enhanced_cbv.tests.models import Article, Author
 
 
 class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
+        exclude = ('author', )
 
 class AuthorForm(forms.ModelForm):
     class Meta:
@@ -24,3 +26,6 @@ class ArticleEnhancedModelFormSet(EnhancedModelFormSet):
 
 class AuthorEnhancedModelFormSet(EnhancedModelFormSet):
     model = Author
+
+class ArticleEnhancedInlineFormSet(EnhancedInlineFormSet):
+    model = Article
