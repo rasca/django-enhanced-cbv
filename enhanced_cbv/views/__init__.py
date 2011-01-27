@@ -1,1 +1,3 @@
-from edit import FormSetsView, ModelFormSetsView, InlineFormSetsView
+from edit import (FormSetsView, ModelFormSetsView, InlineFormSetsView,
+                  EnhancedFormSet, EnhancedModelFormSet,
+                  EnhancedInlineFormSet, )
