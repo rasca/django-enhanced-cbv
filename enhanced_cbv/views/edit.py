@@ -27,8 +27,9 @@ class EnhancedFormSet(object):
         """
         Returns the base formset
         """
-        kwargs.update(self.get_kwargs())
-        return self.get_factory()(**kwargs)
+        new_kwargs = self.get_kwargs()
+        new_kwargs.update(**kwargs)
+        return self.get_factory()(**new_kwargs)
 
     def get_factory(self):
         """
