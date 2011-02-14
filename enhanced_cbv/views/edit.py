@@ -72,7 +72,7 @@ class EnhancedModelFormSet(EnhancedFormSet):
             return self.model
         else:
             try:
-                return self.form_class.Meta.model
+                return self.get_form_class().Meta.model
             except AttributeError:
                 raise ImproperlyConfigured(
                 "No model to create the modelformset. Provide one.")
