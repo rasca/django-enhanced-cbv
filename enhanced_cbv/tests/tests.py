@@ -1,5 +1,7 @@
 from django.test import TestCase
-from enhanced_cbv.views.edit import FormSetsMixin, ModelFormSetsMixin
+from django.core.exceptions import ImproperlyConfigured
+from enhanced_cbv.views.edit import (FormSetsMixin, ModelFormSetsMixin,
+        EnhancedModelFormSet, )
 from enhanced_cbv.tests.models import Author, Article
 
 
@@ -53,6 +55,13 @@ class FormSetsViewTests(TestCase):
         response = self.client.post('/edit/formsets/', self.data)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ERROR')
+
+
+class ModelFormSetsTests(TestCase):
+    def test_no_model_no_form_class(self):
+        formset = EnhancedModelFormSet()
+        self.assertRaises(ImproperlyConfigured, formset.get_model)
+
 
 
 class ModelFormSetsViewTests(TestCase):
@@ -109,6 +118,7 @@ class ModelFormSetsViewTests(TestCase):
         self.assertEqual(Author.objects.count(), 0)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ERROR')
+
 
 class InlineFormSetsViewTests(TestCase):
     urls = 'enhanced_cbv.tests.urls'
