@@ -13,7 +13,7 @@ class PDFTemplateResponse(TemplateResponse):
 
     def __init__(self, request, template, context=None,
                  mimetype='application/pdf', status=None, content_type=None,
-                 current_app=None, filename='filename.pdf'):
+                 current_app=None, filename=None):
         """Simple adds a default mimetype for PDFs and a filename"""
 
         self.filename = filename
