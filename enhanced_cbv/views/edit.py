@@ -250,7 +250,6 @@ class InlineFormSetsMixin(ModelFormSetsMixin, ModelFormMixin):
         """
         context_data = ModelFormSetsMixin.get_context_data(self)
         context_data.update(ModelFormMixin.get_context_data(self, **kwargs))
-        # print context_data['formsets'][0]
         return context_data
 
     def get_factory_kwargs(self):
@@ -260,6 +259,17 @@ class InlineFormSetsMixin(ModelFormSetsMixin, ModelFormMixin):
         return {
             'parent_model': self.object.__class__,
         }
+
+    def form_valid(self, form):
+        self.object.save()
+        form.save_m2m()
+        for formset in self.formsets_instances:
+            formset.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class ProcessFormSetsView(View):
@@ -320,16 +330,11 @@ class ProcessInlineFormSetsView(View):
             self.construct_formsets()
 
             if all_valid(self.formsets_instances):
-                self.object.save()
-                form.save_m2m()
-                for formset in self.formsets_instances:
-                    formset.save()
-
-                return HttpResponseRedirect(self.get_success_url())
+                return self.form_valid(form)
         else:
             # ProcessFormSetsViewV
             self.construct_formsets()
-        return self.render_to_response(self.get_context_data(form=form))
+        return self.form_invalid(form)
 
 
     def put(self, request, *args, **kwargs):
@@ -364,7 +369,6 @@ class ModelFormSetsView(TemplateResponseMixin, BaseModelFormSetsView):
     """
     A view for displaying model formsets, and rendering a template response
     """
-
 
 
 class InlineFormSetsView(SingleObjectTemplateResponseMixin,
