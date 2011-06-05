@@ -1,5 +1,5 @@
 from enhanced_cbv.views import (FormSetsView, ModelFormSetsView,
-                                InlineFormSetsView)
+                                InlineFormSetsView, ListFilteredView, )
 
 from enhanced_cbv.tests.forms import (
     ArticleEnhancedFormSet, AuthorEnhancedFormSet,
@@ -7,6 +7,7 @@ from enhanced_cbv.tests.forms import (
     ArticleEnhancedInlineFormSet
 )
 from enhanced_cbv.tests.models import Author
+from enhanced_cbv.tests.filters import AuthorFilterSet
 
 
 class AuthorsArticlesView(FormSetsView):
@@ -26,3 +27,9 @@ class AuthorsInlinesView(InlineFormSetsView):
     template_name = 'authors_articles.html'
     success_url = '/success/'
     model = Author
+
+
+class AuthorsListFilteredView(ListFilteredView):
+    model = Author
+    filter_set = AuthorFilterSet
+    template_name = 'authors_list.html'

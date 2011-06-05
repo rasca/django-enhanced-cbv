@@ -3,6 +3,7 @@ from django.core.exceptions import ImproperlyConfigured
 from enhanced_cbv.views.edit import (FormSetsMixin, ModelFormSetsMixin,
         EnhancedModelFormSet, )
 from enhanced_cbv.tests.models import Author, Article
+from enhanced_cbv.tests.filters import AuthorFilterSet
 
 
 class FormSetsViewTests(TestCase):
@@ -61,7 +62,6 @@ class ModelFormSetsTests(TestCase):
     def test_no_model_no_form_class(self):
         formset = EnhancedModelFormSet()
         self.assertRaises(ImproperlyConfigured, formset.get_model)
-
 
 
 class ModelFormSetsViewTests(TestCase):
@@ -186,3 +186,25 @@ class InlineFormSetsViewTests(TestCase):
         self.assertEqual(Article.objects.count(), 0)
         self.assertEqual(Author.objects.count(), 1)
         self.assertEqual(response.status_code, 302)
+
+
+
+class ListFilteredViewTests(TestCase):
+    urls = 'enhanced_cbv.tests.urls'
+
+    def setUp(self):
+        Author.objects.create(name='Herman Melville')
+        Author.objects.create(name='Robert Stevenson')
+
+    def test_queryset(self):
+        # No filter
+        response = self.client.get('/list/filtered/')
+        self.assertEqual(response.context['object_list'].count(), 2)
+
+        # Name filter
+        response = self.client.get('/list/filtered/?name=Herman%20Melville')
+        self.assertEqual(response.context['object_list'].count(), 1)
+
+    def test_context(self):
+        response = self.client.get('/list/filtered/')
+        self.assertEqual(type(response.context['filter']), AuthorFilterSet)

@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import *
 
 from enhanced_cbv.tests.views import (AuthorsArticlesView,
-     AuthorsArticlesModelsView, AuthorsInlinesView)
+     AuthorsArticlesModelsView, AuthorsInlinesView, AuthorsListFilteredView, )
 
 
 urlpatterns = patterns('',
@@ -13,4 +13,6 @@ urlpatterns = patterns('',
         AuthorsArticlesModelsView.as_view()),
     (r'^edit/inlineformsets/$',
         AuthorsInlinesView.as_view()),
+    (r'^list/filtered/$',
+        AuthorsListFilteredView.as_view()),
 )

@@ -5,6 +5,7 @@ BASE_DIR = os.path.dirname(__file__)
 INSTALLED_APPS = (
     'enhanced_cbv',
     'enhanced_cbv.tests',
+    'django_filters',
 )
 
 ROOT_URLCONF = 'enhanced_cbv.tests.urls'
