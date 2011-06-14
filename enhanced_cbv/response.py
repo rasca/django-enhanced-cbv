@@ -3,8 +3,6 @@ from enhanced_cbv.utils import fetch_resources
 
 class PDFTemplateResponse(TemplateResponse):
 
-    link_callback = fetch_resources
-
     # The following is needed due to an error un pisa (pdf generation)
     # It must be executed once at startup
     import logging
@@ -41,7 +39,7 @@ class PDFTemplateResponse(TemplateResponse):
 
             # Create the PDF object, using the StringIO object as its "file."
             pisa.CreatePDF(self.rendered_content, buffer,
-                           link_callback=self.link_callback)
+                           link_callback=fetch_resources)
 
             # Get the value of the StringIO buffer and write it to the response.
             pdf = buffer.getvalue()
