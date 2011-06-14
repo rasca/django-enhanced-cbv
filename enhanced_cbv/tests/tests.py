@@ -188,7 +188,6 @@ class InlineFormSetsViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
-
 class ListFilteredViewTests(TestCase):
     urls = 'enhanced_cbv.tests.urls'
 
