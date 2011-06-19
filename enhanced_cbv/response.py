@@ -1,5 +1,10 @@
 from django.template.response import TemplateResponse
-from enhanced_cbv.utils import fetch_resources
+from enhanced_cbv.utils import fetch_resources, UnicodeWriter
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+
 
 class PDFTemplateResponse(TemplateResponse):
 
@@ -26,10 +31,6 @@ class PDFTemplateResponse(TemplateResponse):
 
         # The following is required for PDF generation
 
-        try:
-            from cStringIO import StringIO
-        except ImportError:
-            from StringIO import StringIO
         import ho.pisa as pisa
 
         if not self._is_rendered:
@@ -51,6 +52,51 @@ class PDFTemplateResponse(TemplateResponse):
                 self.filename, )
 
             # The PDF has been rendered
+            self._is_rendered = True
+
+            for post_callback in self._post_render_callbacks:
+                post_callback(self)
+        return self
+
+
+class CSVTemplateResponse(TemplateResponse):
+
+
+    def __init__(self, request, template, context=None,
+                 mimetype='text/csv', status=None, content_type=None,
+                 current_app=None, filename=None, rows=None):
+        """Simple adds a default mimetype for CSVs and a filename"""
+
+        self.filename = filename
+        self.rows = rows
+
+        super(CSVTemplateResponse, self).__init__(request,
+            template, context, mimetype, status, content_type)
+
+    def render(self):
+        """This is the tricky part, whith the rendered_content create a CSV"""
+
+
+        if not self._is_rendered:
+
+            # File pointer needed to create the CSV in memory
+            buffer = StringIO()
+            writer = UnicodeWriter(buffer)
+
+            for row in self.rows:
+                writer.writerow([unicode(value).encode('utf-8') for value
+                                 in row])
+
+            # Get the value of the StringIO buffer and write it to the response.
+            csv = buffer.getvalue()
+            buffer.close()
+            self.write(csv)
+
+            # Sets the appropriate CSV headers.
+            self['Content-Disposition'] = 'attachment; filename=%s' % (
+                self.filename, )
+
+            # The CSV has been generated
             self._is_rendered = True
 
             for post_callback in self._post_render_callbacks:
