@@ -10,6 +10,11 @@ class PDFTemplateResponse(TemplateResponse):
 
     # The following is needed due to an error un pisa (pdf generation)
     # It must be executed once at startup
+    #
+    # TODO: Check if this still happends in xhtml2pdf (the most up-to-date
+    # version of pisa was renamed). Otherwise, report it to
+    # https://github.com/chrisglass/xhtml2pdf
+
     import logging
     class PisaNullHandler(logging.Handler):
         def emit(self, record):
@@ -31,7 +36,7 @@ class PDFTemplateResponse(TemplateResponse):
 
         # The following is required for PDF generation
 
-        import ho.pisa as pisa
+        import xhtml2pdf.pisa as pisa # The import is changed to xhtml2pdf
 
         if not self._is_rendered:
 
