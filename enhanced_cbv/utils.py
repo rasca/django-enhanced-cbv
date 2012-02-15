@@ -33,7 +33,7 @@ class UnicodeWriter:
         for s in row:
             try:
                 encoded_row.append(s.encode("utf-8"))
-            except AttributeError:
+            except (AttributeError, UnicodeDecodeError):
                 encoded_row.append(s)
 
         self.writer.writerow(encoded_row)
