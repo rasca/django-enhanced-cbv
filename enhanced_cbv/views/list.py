@@ -16,6 +16,15 @@ class ListFilteredMixin(object):
                 "ListFilterMixin requires either a definition of "
                 "'filter_set' or an implementation of 'get_filter()'")
 
+    def get_filter_set_kwargs(self):
+        """
+        Returns the keyword arguments for instanciating the filterset.
+        """
+        return {
+            'data': self.request.GET,
+            'queryset': self.get_base_queryset(),
+        }
+
     def get_base_queryset(self):
         """
         We can decided to either alter the queryset before or after applying the
@@ -29,8 +38,7 @@ class ListFilteredMixin(object):
         if getattr(self, 'constructed_filter', None):
             return self.constructed_filter
         else:
-            f = self.get_filter_set()(self.request.GET,
-                                      queryset=self.get_base_queryset())
+            f = self.get_filter_set()(**self.get_filter_set_kwargs())
             self.constructed_filter = f
             return f
 
