@@ -261,7 +261,7 @@ class InlineFormSetsMixin(ModelFormSetsMixin, ModelFormMixin):
         }
 
     def form_valid(self, form):
-        self.object.save()
+        form.save()
         form.save_m2m()
         for formset in self.formsets_instances:
             formset.save()
