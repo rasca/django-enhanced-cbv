@@ -32,6 +32,7 @@ class CSVTemplateResponseMixin(TemplateResponseMixin):
 
     response_class = CSVTemplateResponse
     filename = None
+    writer_kwargs = None
 
     def get_filename(self):
         if self.filename is None:
@@ -40,6 +41,9 @@ class CSVTemplateResponseMixin(TemplateResponseMixin):
                 "'filename' or an implementation of 'get_filename()'")
         else:
             return self.filename
+
+    def get_writer_kwargs(self):
+        return self.writer_kwargs
 
     def render_to_response(self, *args, **kwargs):
         """
@@ -50,7 +54,8 @@ class CSVTemplateResponseMixin(TemplateResponseMixin):
             rows.append(self.get_row(obj))
         kwargs.update({
             'rows': rows,
-            'filename': self.get_filename()
+            'filename': self.get_filename(),
+            'writer_kwargs': self.get_writer_kwargs(),
         })
         return super(CSVTemplateResponseMixin, self).render_to_response(*args, **kwargs)
 

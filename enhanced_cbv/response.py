@@ -69,11 +69,16 @@ class CSVTemplateResponse(TemplateResponse):
 
     def __init__(self, request, template, context=None,
                  mimetype='text/csv', status=None, content_type=None,
-                 current_app=None, filename=None, rows=None):
+                 current_app=None, filename=None, rows=None,
+                 writer_kwargs=None):
         """Simple adds a default mimetype for CSVs and a filename"""
 
         self.filename = filename
         self.rows = rows
+        if writer_kwargs:
+            self.writer_kwargs = writer_kwargs
+        else:
+            self.writer_kwargs = {}
 
         super(CSVTemplateResponse, self).__init__(request,
             template, context, mimetype, status, content_type)
@@ -86,7 +91,7 @@ class CSVTemplateResponse(TemplateResponse):
 
             # File pointer needed to create the CSV in memory
             buffer = StringIO()
-            writer = UnicodeWriter(buffer)
+            writer = UnicodeWriter(buffer, **self.writer_kwargs)
 
             for row in self.rows:
                 writer.writerow([unicode(value).encode('utf-8') for value
