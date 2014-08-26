@@ -14,7 +14,7 @@ class AuthorsArticlesView(FormSetsView):
     formsets = [ArticleEnhancedFormSet, AuthorEnhancedFormSet]
     template_name = 'authors_articles.html'
     success_url = '/success/'
-    
+
 
 class AuthorsArticlesModelsView(ModelFormSetsView):
     formsets = [ArticleEnhancedModelFormSet, AuthorEnhancedModelFormSet]
@@ -23,10 +23,15 @@ class AuthorsArticlesModelsView(ModelFormSetsView):
 
 
 class AuthorsInlinesView(InlineFormSetsView):
-    formsets = [ArticleEnhancedInlineFormSet,]
+    formsets = [ArticleEnhancedInlineFormSet, ]
     template_name = 'authors_articles.html'
     success_url = '/success/'
     model = Author
+
+    def get_context_data(self, **kwargs):
+        context = super(AuthorsInlinesView, self).get_context_data(**kwargs)
+        context['new_object'] = self.new_object
+        return context
 
 
 class AuthorsListFilteredView(ListFilteredView):

@@ -229,7 +229,7 @@ class ModelFormSetsMixin(FormSetsMixin):
 
 
 class InlineFormSetsMixin(ModelFormSetsMixin, ModelFormMixin):
-    """ 
+    """
     A mixin that provides a way to show and handle a model with it's inline
     formsets
     """
@@ -294,14 +294,19 @@ class ProcessFormSetsView(View):
 class ProcessInlineFormSetsView(View):
     """
     A mixin that processes a model instance and it's inline formsets on POST
+
+    It specifies if you are creating or updating and object in
+    `self.new_object`.
     """
 
     def get(self, request, *args, **kwargs):
         # Create or Update
         try:
             self.object = self.get_object()
+            self.new_object = False
         except AttributeError:
             self.object = self.model()
+            self.new_object = True
 
         # ProcessFormView
         form_class = self.get_form_class()
@@ -316,8 +321,10 @@ class ProcessInlineFormSetsView(View):
         # Create or Update
         try:
             self.object = self.get_object()
+            self.new_object = False
         except AttributeError:
             self.object = self.model()
+            self.new_object = True
 
         # ProcessFormView
         form_class = self.get_form_class()
@@ -335,7 +342,6 @@ class ProcessInlineFormSetsView(View):
             # ProcessFormSetsViewV
             self.construct_formsets()
         return self.form_invalid(form)
-
 
     def put(self, request, *args, **kwargs):
         return self.post(*args, **kwargs)

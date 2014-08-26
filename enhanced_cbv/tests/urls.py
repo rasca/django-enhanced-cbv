@@ -13,6 +13,8 @@ urlpatterns = patterns('',
         AuthorsArticlesModelsView.as_view()),
     (r'^edit/inlineformsets/$',
         AuthorsInlinesView.as_view()),
+    (r'^edit/inlineformsets/(?P<pk>\d)/$',
+        AuthorsInlinesView.as_view()),
     (r'^list/filtered/$',
         AuthorsListFilteredView.as_view()),
 )

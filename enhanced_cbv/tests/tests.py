@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.core.exceptions import ImproperlyConfigured
-from enhanced_cbv.views.edit import (FormSetsMixin, ModelFormSetsMixin,
+from enhanced_cbv.views.edit import (FormSetsMixin, ModelFormSetsMixin,  # noqa
         EnhancedModelFormSet, )
 from enhanced_cbv.tests.models import Author, Article
 from enhanced_cbv.tests.filters import AuthorFilterSet
@@ -178,6 +178,7 @@ class InlineFormSetsViewTests(TestCase):
         self.assertEqual(Author.objects.count(), 0)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ERROR')
+        self.assertEqual(response.context['new_object'], True)
 
     def test_no_formset(self):
         data = self.formdata
@@ -186,6 +187,23 @@ class InlineFormSetsViewTests(TestCase):
         self.assertEqual(Article.objects.count(), 0)
         self.assertEqual(Author.objects.count(), 1)
         self.assertEqual(response.status_code, 302)
+
+    def test_edit(self):
+        author = Author.objects.create(name='test')
+        data = self.formdata
+        data.update(self.formsetdata)
+        data.update(self.formsetmgmt)
+        response = self.client.get('/edit/inlineformsets/%s/' % author.pk, data)
+        self.assertEqual(response.context['new_object'], False)
+
+    def test_edit_update(self):
+        author = Author.objects.create(name='test')
+        data = self.formdata
+        data.update(self.formsetdata)
+        data.update(self.formsetmgmt)
+        data['name'] = ''  # raises an error cause it's required so we can inspect the context
+        response = self.client.post('/edit/inlineformsets/%s/' % author.pk, data)
+        self.assertEqual(response.context['new_object'], False)
 
 
 class ListFilteredViewTests(TestCase):
