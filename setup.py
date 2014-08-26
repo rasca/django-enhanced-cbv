@@ -5,7 +5,7 @@ setup(
     version='0.1.dev',
     author='Ivan Raskovsky (rasca)',
     author_email='raskovsky@gmail.com',
-    packages=['enhanced_cbv',],
+    packages=['enhanced_cbv','enhanced_cbv.views'],
     license='BSD',
     description='generic class based views with enhanced functionallity',
     long_description=open('README.txt').read(),
