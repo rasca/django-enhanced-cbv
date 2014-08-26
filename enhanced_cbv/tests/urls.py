@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import *
+from django.conf.urls import patterns
 
 from enhanced_cbv.tests.views import (AuthorsArticlesView,
      AuthorsArticlesModelsView, AuthorsInlinesView, AuthorsListFilteredView, )

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import os, sys
+import os
+import sys
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'enhanced_cbv.tests.test_settings'
 parent = os.path.dirname(os.path.dirname(os.path.dirname(
@@ -8,13 +9,15 @@ parent = os.path.dirname(os.path.dirname(os.path.dirname(
 
 sys.path.insert(0, parent)
 
-from django.test.simple import run_tests
-from django.conf import settings
+import django
+from django.test.runner import DiscoverRunner
+
 
 def runtests():
-    failures = run_tests(['tests'], verbosity=1, interactive=True)
+    django.setup()
+    test_runner = DiscoverRunner(verbosity=1, interactive=True)
+    failures = test_runner.run_tests([])
     sys.exit(failures)
 
 if __name__ == '__main__':
     runtests()
-

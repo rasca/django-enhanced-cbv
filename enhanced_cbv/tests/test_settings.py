@@ -1,5 +1,7 @@
 import os
 
+SECRET_KEY = 'test'
+
 BASE_DIR = os.path.dirname(__file__)
 
 INSTALLED_APPS = (
@@ -18,3 +20,7 @@ DATABASES = {
     },
 }
 
+MIDDLEWARE_CLASSES = (
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+)
