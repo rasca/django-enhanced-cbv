@@ -1,6 +1,7 @@
 from django.views.generic.base import TemplateResponseMixin
 from enhanced_cbv.response import PDFTemplateResponse, CSVTemplateResponse
 
+
 class PDFTemplateResponseMixin(TemplateResponseMixin):
     """
     Extends the TemplateResponseMixin with a filename for render_to_response
@@ -37,7 +38,7 @@ class CSVTemplateResponseMixin(TemplateResponseMixin):
     def get_filename(self):
         if self.filename is None:
             raise ImproperlyConfigured(
-                "PDFTemplateResponseMixin requires either a definition of "
+                "CSVTemplateResponseMixin requires either a definition of "
                 "'filename' or an implementation of 'get_filename()'")
         else:
             return self.filename
