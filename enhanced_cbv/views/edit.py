@@ -127,15 +127,19 @@ class FormSetsMixin(object):
     formsets = []  # must be a list of BaseGenericFormSet
     success_url = None
 
-    def __init__(self, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         self.instantiate_enhanced_formsets()
+        return super(FormSetsMixin, self).dispatch(request, *args, **kwargs)
+
+    def get_formsets(self):
+        return self.formsets
 
     def instantiate_enhanced_formsets(self):
         """
         Instantiates the enhanced formsets
         """
         self.enhanced_formsets_instances = []
-        for formset in self.formsets:
+        for formset in self.get_formsets():
             enhanced_formset_instance = formset()
             self.enhanced_formsets_instances.append(enhanced_formset_instance)
 
