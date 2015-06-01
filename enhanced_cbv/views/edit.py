@@ -127,10 +127,6 @@ class FormSetsMixin(object):
     formsets = []  # must be a list of BaseGenericFormSet
     success_url = None
 
-    def dispatch(self, request, *args, **kwargs):
-        self.instantiate_enhanced_formsets()
-        return super(FormSetsMixin, self).dispatch(request, *args, **kwargs)
-
     def get_formsets(self):
         return self.formsets
 
@@ -280,6 +276,11 @@ class ProcessFormSetsView(View):
     """
     A mixin that processes formsets on POST
     """
+
+    def dispatch(self, request, *args, **kwargs):
+        self.instantiate_enhanced_formsets()
+        return super(ProcessFormSetsView, self).dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         self.construct_formsets()
         return self.render_to_response(self.get_context_data())
@@ -295,7 +296,7 @@ class ProcessFormSetsView(View):
         return self.post(*args, **kwargs)
 
 
-class ProcessInlineFormSetsView(View):
+class ProcessInlineFormSetsView(ProcessFormSetsView):
     """
     A mixin that processes a model instance and it's inline formsets on POST
 
@@ -346,9 +347,6 @@ class ProcessInlineFormSetsView(View):
             # ProcessFormSetsViewV
             self.construct_formsets()
         return self.form_invalid(form)
-
-    def put(self, request, *args, **kwargs):
-        return self.post(*args, **kwargs)
 
 
 class BaseFormSetsView(FormSetsMixin, ProcessFormSetsView):
