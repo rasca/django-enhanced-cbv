@@ -27,6 +27,7 @@ class AuthorsInlinesView(InlineFormSetsView):
     template_name = 'authors_articles.html'
     success_url = '/success/'
     model = Author
+    fields = ('name', )
 
     def get_context_data(self, **kwargs):
         context = super(AuthorsInlinesView, self).get_context_data(**kwargs)

@@ -1,2 +1,2 @@
-git+https://github.com/django/django.git@stable/1.7.x#egg=django
+Django<1.9,>1.8
 django-filter
