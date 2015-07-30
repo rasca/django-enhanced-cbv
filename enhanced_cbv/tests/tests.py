@@ -240,3 +240,7 @@ class ListExportTests(TestCase):
     def test_export(self):
         response = self.client.get('/list/export/')
         self.assertEqual(response.status_code, 200)
+        self.assertEquals(
+            response.get('Content-Disposition'),
+            "attachment; filename=article_all.csv"
+        )
