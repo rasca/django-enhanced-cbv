@@ -5,6 +5,8 @@ SECRET_KEY = 'test'
 BASE_DIR = os.path.dirname(__file__)
 
 INSTALLED_APPS = (
+    'django.contrib.contenttypes',
+    'django.contrib.auth',
     'enhanced_cbv',
     'enhanced_cbv.tests',
     'django_filters',

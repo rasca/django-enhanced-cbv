@@ -1,3 +1,4 @@
+from datetime import date
 from django.test import TestCase
 from django.core.exceptions import ImproperlyConfigured
 from enhanced_cbv.views.edit import (FormSetsMixin, ModelFormSetsMixin,  # noqa
@@ -225,3 +226,21 @@ class ListFilteredViewTests(TestCase):
     def test_context(self):
         response = self.client.get('/list/filtered/')
         self.assertEqual(type(response.context['filter']), AuthorFilterSet)
+
+
+class ListExportTests(TestCase):
+    def setUp(self):
+        melville = Author.objects.create(name='Herman Melville')
+        stevenson = Author.objects.create(name='Robert Stevenson')
+        pub_date = date(2015, 7, 29)
+        Article.objects.create(title="Typee", pub_date=pub_date, author=melville)
+        Article.objects.create(title='Omoo', pub_date=pub_date, author=melville)
+        Article.objects.create(title='Mary Poppins', pub_date=pub_date, author=stevenson)
+
+    def test_export(self):
+        response = self.client.get('/list/export/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEquals(
+            response.get('Content-Disposition'),
+            "attachment; filename=article_all.csv"
+        )

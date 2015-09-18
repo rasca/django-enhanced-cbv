@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+# command to install dependencies
+install:
+  - "pip install tox"
+# command to run tests
+script: tox
+# Adding sudo: False tells Travis to use their container-based infrastructure, which is somewhat faster.
+sudo: False

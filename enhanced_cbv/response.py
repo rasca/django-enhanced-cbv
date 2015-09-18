@@ -66,10 +66,9 @@ class PDFTemplateResponse(TemplateResponse):
 
 class CSVTemplateResponse(TemplateResponse):
 
-
     def __init__(self, request, template, context=None,
-                 mimetype='text/csv', status=None, content_type=None,
-                 current_app=None, filename=None, rows=None,
+                 content_type='text/csv', status=None,
+                 current_app=None, using=None, filename=None, rows=None,
                  writer_kwargs=None):
         """Simple adds a default mimetype for CSVs and a filename"""
 
@@ -80,12 +79,11 @@ class CSVTemplateResponse(TemplateResponse):
         else:
             self.writer_kwargs = {}
 
-        super(CSVTemplateResponse, self).__init__(request,
-            template, context, mimetype, status, content_type)
+        super(CSVTemplateResponse, self).__init__(
+            request, template, context, content_type, status, using)
 
     def render(self):
         """This is the tricky part, whith the rendered_content create a CSV"""
-
 
         if not self._is_rendered:
 
