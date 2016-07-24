@@ -1,9 +1,12 @@
-from django.template.response import TemplateResponse
-from enhanced_cbv.utils import fetch_resources, UnicodeWriter
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
+    from StringIO import StringIO  # noqa
+
+import django
+from django.template.response import TemplateResponse
+
+from enhanced_cbv.utils import fetch_resources, UnicodeWriter
 
 
 class PDFTemplateResponse(TemplateResponse):
@@ -16,27 +19,32 @@ class PDFTemplateResponse(TemplateResponse):
     # https://github.com/chrisglass/xhtml2pdf
 
     import logging
+
     class PisaNullHandler(logging.Handler):
         def emit(self, record):
             pass
     logging.getLogger("ho.pisa").addHandler(PisaNullHandler())
 
     def __init__(self, request, template, context=None,
-                 mimetype='application/pdf', status=None, content_type=None,
-                 current_app=None, filename=None):
+                 content_type='application/pdf', status=None, current_app=None,
+                 charset=None, using=None, filename=None):
         """Simple adds a default mimetype for PDFs and a filename"""
 
         self.filename = filename
 
-        super(PDFTemplateResponse, self).__init__(request,
-            template, context, mimetype, status, content_type)
+        if django.VERSION < (1, 8):
+            super(PDFTemplateResponse, self).__init__(request,
+                template, context, content_type, status, using)
+        else:
+            super(PDFTemplateResponse, self).__init__(request,
+                template, context, content_type, status, charset, using)
 
     def render(self):
         """This is the tricky part, whith the rendered_content create a PDF"""
 
         # The following is required for PDF generation
 
-        import xhtml2pdf.pisa as pisa # The import is changed to xhtml2pdf
+        import xhtml2pdf.pisa as pisa  # The import is changed to xhtml2pdf
 
         if not self._is_rendered:
 
@@ -68,8 +76,8 @@ class CSVTemplateResponse(TemplateResponse):
 
     def __init__(self, request, template, context=None,
                  content_type='text/csv', status=None,
-                 current_app=None, using=None, filename=None, rows=None,
-                 writer_kwargs=None):
+                 current_app=None, charset=None, using=None, filename=None,
+                 rows=None, writer_kwargs=None):
         """Simple adds a default mimetype for CSVs and a filename"""
 
         self.filename = filename
@@ -79,8 +87,12 @@ class CSVTemplateResponse(TemplateResponse):
         else:
             self.writer_kwargs = {}
 
-        super(CSVTemplateResponse, self).__init__(
-            request, template, context, content_type, status, using)
+        if django.VERSION < (1, 8):
+            super(CSVTemplateResponse, self).__init__(request,
+                template, context, content_type, status, using)
+        else:
+            super(CSVTemplateResponse, self).__init__(request,
+                template, context, content_type, status, charset, using)
 
     def render(self):
         """This is the tricky part, whith the rendered_content create a CSV"""
