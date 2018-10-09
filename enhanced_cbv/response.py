@@ -26,7 +26,7 @@ class PDFTemplateResponse(TemplateResponse):
     logging.getLogger("ho.pisa").addHandler(PisaNullHandler())
 
     def __init__(self, request, template, context=None,
-                 content_type='application/pdf', status=None, current_app=None,
+                 content_type='application/pdf', status=None,
                  charset=None, using=None, filename=None):
         """Simple adds a default mimetype for PDFs and a filename"""
 
@@ -76,7 +76,7 @@ class CSVTemplateResponse(TemplateResponse):
 
     def __init__(self, request, template, context=None,
                  content_type='text/csv', status=None,
-                 current_app=None, charset=None, using=None, filename=None,
+                 charset=None, using=None, filename=None,
                  rows=None, writer_kwargs=None):
         """Simple adds a default mimetype for CSVs and a filename"""
 
